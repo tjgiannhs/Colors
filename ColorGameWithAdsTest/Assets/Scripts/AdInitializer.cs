@@ -7,7 +7,7 @@ public class AdInitializer : MonoBehaviour, IUnityAdsInitializationListener
 {
     [SerializeField] string _androidGameId;
     [SerializeField] string _iOsGameId;
-    [SerializeField] bool _testMode = true;
+    bool _testMode = false;//not in the inspector
     private string _gameId;
 
     //public SwitchControl switchControl;

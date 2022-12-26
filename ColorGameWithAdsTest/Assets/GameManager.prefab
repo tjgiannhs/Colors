@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 7689030725301475017}
   - component: {fileID: 7689030725301475018}
   - component: {fileID: 7689030725301475016}
+  - component: {fileID: 2252730823223575829}
   - component: {fileID: 7689030725301475031}
   m_Layer: 0
   m_Name: GameManager
@@ -46,7 +47,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2cb43d1b45e2e0b48afc0fb74db29b51, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  myAudioClip: {fileID: 8300000, guid: 3a128294d3575164da08b28f1c271914, type: 3}
+  buttonClip: {fileID: 0}
+  swipeClip: {fileID: 0}
+  combineClip: {fileID: 0}
+  deleteClip: {fileID: 0}
+  highscoreClip: {fileID: 0}
+  endGameClip: {fileID: 0}
 --- !u!114 &7689030725301475016
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -59,7 +65,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a7038e990a5bea04e9f2d727a303547b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  adsManager: {fileID: 0}
+  mainMenuCanvas: {fileID: 0}
   exitGamePopup: {fileID: 0}
+  boardObject: {fileID: 0}
+  colorblindButton: {fileID: 0}
+  musicButton: {fileID: 0}
+  soundsButton: {fileID: 0}
+  vibrationButton: {fileID: 0}
+  FTUEinstructions: {fileID: 0}
+  highscoreTextMainMenu: {fileID: 0}
+  checkImage: {fileID: 0}
+  crossImage: {fileID: 0}
+--- !u!114 &2252730823223575829
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7689030725301475019}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c41c67c8c0baf21468b8fc90efc1b918, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!114 &7689030725301475031
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -80,6 +109,4 @@ MonoBehaviour:
     entries:
     - root: {fileID: 7689030725301475017}
       speed: -1
-      aliases:
-      - Key: parentWithAnimationTarget
-        Obj: {fileID: 0}
+      aliases: []

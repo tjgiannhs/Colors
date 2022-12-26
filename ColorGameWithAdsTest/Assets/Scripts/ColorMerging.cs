@@ -19,6 +19,8 @@ public class ColorMerging : MonoBehaviour
     [SerializeField] int rows = 4;
     [SerializeField] bool allowSecondaryColorsAdded;
     GameObject blockToBeAdded;
+    int gamesThisSession = 0;
+    int adsThisSession = 0;
     int movesPlayed = 0;
     bool noMoreAvailableMoves = false;
     int score = 0;
@@ -35,6 +37,8 @@ public class ColorMerging : MonoBehaviour
         previousColorsAdded = new List<int>();
         colorblindModeOn = PlayerPrefs.GetInt("ColorblindOn",0)>0.5;
         //ClearBoard();
+        gameManager.GetComponent<AnalyticsManager>().reportGamesLastSession(PlayerPrefs.GetInt("gamesThisSession",0));
+        gameManager.GetComponent<AnalyticsManager>().reportAdsLastSession(PlayerPrefs.GetInt("adsThisSession",0));
         SetupGame();
     }
 
@@ -64,7 +68,7 @@ public class ColorMerging : MonoBehaviour
     void PrintResults()
     {
         totalScores.Sort();
-        print(totalScores[0] +" - "+ totalScores[totalScores.Count/2]+" - "+totalScores[totalScores.Count-1]);
+        //print(totalScores[0] +" - "+ totalScores[totalScores.Count/2]+" - "+totalScores[totalScores.Count-1]);
         totalScores.Clear();
     }
     void PlayYourself()
@@ -103,17 +107,18 @@ public class ColorMerging : MonoBehaviour
     {
         yield return new WaitForSeconds(1);
         timeSinceLastAd++;
+        StartCoroutine(CountSecondsSinceLastAd());
     }
 
     void SetupGame()
     {
-        if(gamesSinceLastAd>=3 || timeSinceLastAd>=160)
+        DisplayInterstitialOrDont();
+        StartCoroutine(CountSecondsSinceLastAd());
+        if(movesPlayed>0)
         {
-            GameObject.Find("AdsManager").GetComponent<InterstitialAds>().ShowAd();
-            gamesSinceLastAd = 0;
-            timeSinceLastAd = 0;
-        }
-        StartCoroutine("CountSecondsSinceLastAd");
+            gamesThisSession++;
+            PlayerPrefs.SetInt("gamesThisSession",gamesThisSession);
+        } 
         movesPlayed = 0;
         scoreText.text = 0+"";
         hisghscoreText.enabled = false;
@@ -121,13 +126,25 @@ public class ColorMerging : MonoBehaviour
         noMoreAvailableMoves = false;
         previousColorsAdded.Clear();
         nextTilePreviewImage.gameObject.SetActive(true);
-        RandomizeNextColor();
-        while(blockToBeAdded != tilePrefabs[0] && blockToBeAdded != tilePrefabs[1] && blockToBeAdded != tilePrefabs[2])//to make sure at the start of the game the first square will be a primary color
+        RandomizeNextColor(true);
+    }
+
+    public void DisplayInterstitialOrDont()
+    {
+        if(gamesSinceLastAd>=3 || (timeSinceLastAd>=160 && gamesSinceLastAd>=2))
         {
-            RandomizeNextColor();
+            GameObject.Find("AdsManager").GetComponent<InterstitialAds>().ShowAd();
+            adsThisSession++;
+            PlayerPrefs.SetInt("adsThisSession",adsThisSession);
+            gamesSinceLastAd = 0;
+            timeSinceLastAd = 0;
         }
     }
 
+    public int GetMovesPlayed()
+    {
+        return movesPlayed;
+    }
     void ClearBoard()
     {
         for(int i=transform.childCount-1;i>=0;i--)
@@ -228,10 +245,30 @@ public class ColorMerging : MonoBehaviour
             movesPlayed = movesSoFar+1;
             scoreText.text = score+"";
             CenterAllBlocks();
-            RandomizeNextColor();
+            RandomizeNextColor(false);
         } 
         noMoreAvailableMoves = CheckIfGameEnd();
-        if(noMoreAvailableMoves) { Vibrate(false); gamesSinceLastAd++; StopCoroutine("CountSecondsSinceLastAd");}//game ended so big vibration
+        if(noMoreAvailableMoves)
+        {
+            print("Game End "+movesPlayed + ", since last ad "+timeSinceLastAd);
+            hisghscoreText.enabled = true;
+            if(score>PlayerPrefs.GetInt("Highscore",0))
+            {
+                hisghscoreText.text = "NEW HIGHSCORE!";
+                gameManager.GetComponent<SoundPlayer>().PlayHighscoreClip();
+                PlayerPrefs.SetInt("Highscore",score);
+            }else
+            {
+                hisghscoreText.text = "HIGHSCORE\n"+PlayerPrefs.GetInt("Highscore",0);
+                gameManager.GetComponent<SoundPlayer>().PlayGameEndClip();
+            }
+            totalScores.Add(movesPlayed);
+            nextTilePreviewImage.gameObject.SetActive(false);
+            //game ended so big vibration
+            Vibrate(false);
+            gamesSinceLastAd++;
+            StopCoroutine("CountSecondsSinceLastAd");
+        }
         else Vibrate(true);
     }
 
@@ -425,50 +462,68 @@ public class ColorMerging : MonoBehaviour
             case "r":
                 if(!CheckIfColumnFull(0))
                 {
+                    GameObject block;
                     if(colorblindModeOn)
-                        Instantiate(nextTilePreviewImage.transform.GetChild(0),Instantiate(blockToBeAdded,transform.GetChild(GetFreeSquareIndexAtColumn(0))).transform);
+                        block=Instantiate(nextTilePreviewImage.transform.GetChild(0),Instantiate(blockToBeAdded,transform.GetChild(GetFreeSquareIndexAtColumn(0))).transform).gameObject;
                     else
-                        Instantiate(blockToBeAdded,transform.GetChild(GetFreeSquareIndexAtColumn(0)));
+                        block=Instantiate(blockToBeAdded,transform.GetChild(GetFreeSquareIndexAtColumn(0)));
+
                     movesPlayed++;
+                    //block.GetComponent<Canvas>().overrideSorting = true;
+                    score += 1;
+                    gameManager.GetComponent<SoundPlayer>().PlaySwipeClip();
                 }
                 //else print("Column full");
                 break;
             case "l":
                 if(!CheckIfColumnFull(columns-1))
                 {
+                    GameObject block;
                     if(colorblindModeOn)
-                        Instantiate(nextTilePreviewImage.transform.GetChild(0),Instantiate(blockToBeAdded,transform.GetChild(GetFreeSquareIndexAtColumn(columns-1))).transform);
+                        block=Instantiate(nextTilePreviewImage.transform.GetChild(0),Instantiate(blockToBeAdded,transform.GetChild(GetFreeSquareIndexAtColumn(columns-1))).transform).gameObject;
                     else
-                        Instantiate(blockToBeAdded,transform.GetChild(GetFreeSquareIndexAtColumn(columns-1)));
+                        block=Instantiate(blockToBeAdded,transform.GetChild(GetFreeSquareIndexAtColumn(columns-1)));
+
                     movesPlayed++;
+                    //block.GetComponent<Canvas>().overrideSorting = true;
+                    score += 1;
+                    gameManager.GetComponent<SoundPlayer>().PlaySwipeClip();
                 }
                 //else print("Column full");
                 break;
             case "u":
                 if(!CheckIfRowFull(0))
                 {
+                    GameObject block;
                     if(colorblindModeOn)
-                        Instantiate(nextTilePreviewImage.transform.GetChild(0),Instantiate(blockToBeAdded,transform.GetChild(GetFreeSquareIndexAtRow(0))).transform);
+                        block=Instantiate(nextTilePreviewImage.transform.GetChild(0),Instantiate(blockToBeAdded,transform.GetChild(GetFreeSquareIndexAtRow(0))).transform).gameObject;
                     else
-                        Instantiate(blockToBeAdded,transform.GetChild(GetFreeSquareIndexAtRow(0)));
+                        block=Instantiate(blockToBeAdded,transform.GetChild(GetFreeSquareIndexAtRow(0)));
+                    
                     movesPlayed++;
+                    //block.GetComponent<Canvas>().overrideSorting = true;
+                    score += 1;
+                    gameManager.GetComponent<SoundPlayer>().PlaySwipeClip();
                 }
                 //else print("Row full");
                 break;
             case "d":
                 if(!CheckIfRowFull(rows-1))
                 {
+                    GameObject block;
                     if(colorblindModeOn)
-                        Instantiate(nextTilePreviewImage.transform.GetChild(0),Instantiate(blockToBeAdded,transform.GetChild(GetFreeSquareIndexAtRow(rows-1))).transform);
+                        block=Instantiate(nextTilePreviewImage.transform.GetChild(0),Instantiate(blockToBeAdded,transform.GetChild(GetFreeSquareIndexAtRow(rows-1))).transform).gameObject;
                     else
-                        Instantiate(blockToBeAdded,transform.GetChild(GetFreeSquareIndexAtRow(rows-1)));
+                        block=Instantiate(blockToBeAdded,transform.GetChild(GetFreeSquareIndexAtRow(rows-1)));
+                    
                     movesPlayed++;
+                    //block.GetComponent<Canvas>().overrideSorting = true;
+                    score += 1;
+                    gameManager.GetComponent<SoundPlayer>().PlaySwipeClip();
                 }
                 //else print("Row full");
                 break;
         }
-        score += 1;
-        gameManager.GetComponent<SoundPlayer>().PlaySwipeClip();
     }
 
     bool CheckIfRowFull(int r)
@@ -507,7 +562,7 @@ public class ColorMerging : MonoBehaviour
         return GetSquareIndex(index,c);
     }
 
-    bool CheckIfGameEnd()
+    public bool CheckIfGameEnd()
     {
         for(int i=0; i<rows*columns; i++)
         {
@@ -528,20 +583,7 @@ public class ColorMerging : MonoBehaviour
                 if(i!=0) if(CanCombine(GetSquareIndex(i,j),"d")) return false;
             }
         }
-        //print("Game End "+movesPlayed);
-        hisghscoreText.enabled = true;
-        if(score>PlayerPrefs.GetInt("Highscore",0))
-        {
-            hisghscoreText.text = "NEW HIGHSCORE!";
-            gameManager.GetComponent<SoundPlayer>().PlayHighscoreClip();
-            PlayerPrefs.SetInt("Highscore",score);
-        }else
-        {
-            hisghscoreText.text = "HIGHSCORE\n"+PlayerPrefs.GetInt("Highscore",0);
-            gameManager.GetComponent<SoundPlayer>().PlayGameEndClip();
-        }
-        totalScores.Add(movesPlayed);
-        nextTilePreviewImage.gameObject.SetActive(false);
+        
         //also check if any merges can occur to return true then
         return true;
     }
@@ -552,15 +594,20 @@ public class ColorMerging : MonoBehaviour
             if(transform.GetChild(i).childCount>0) transform.GetChild(i).GetChild(0).localPosition = new Vector3(0,0,0);
     }
 
-    void RandomizeNextColor()
+    void RandomizeNextColor(bool duringSetup)
     {
-        int newColorCode = Random.Range(0,(allowSecondaryColorsAdded?15:3))%6;//primary colors have x1.5 the chances to be added
+        int newColorCode;
+
+        //reciprocal function so that the chance of getting a primary color decreases with every move - but never less than 1 (equal to secondaries)
+        if(Random.Range(0,1+50.0f/(movesPlayed+1))>=1) newColorCode = Random.Range(0,3);
+        else newColorCode = Random.Range(3,6);
         
-        while(!CheckIfNextColorValid(newColorCode))
+        while(!CheckIfNextColorValid(newColorCode,duringSetup))
         {
-            newColorCode = Random.Range(0,(allowSecondaryColorsAdded?15:3))%6;   
+            if(Random.Range(0,1+50.0f/(movesPlayed+1))>=1) newColorCode = Random.Range(0,3);//plus one added when dividing to prevent dividing by 0
+            else newColorCode = Random.Range(3,6);
         }
-        
+        //print(tilePrefabs[newColorCode].GetComponent<Image>().color+" - "+nextTilePreviewImage.color);
         previousColorsAdded.Add(newColorCode);
 
         if(previousColorsAdded.Count>10) previousColorsAdded.RemoveAt(0);
@@ -570,17 +617,20 @@ public class ColorMerging : MonoBehaviour
         if(colorblindModeOn) Instantiate(GetGameObjectFromListByName(blockToBeAdded.GetComponent<TileScript>().GetColor()+""),nextTilePreviewImage.transform);
     }
 
-    bool CheckIfNextColorValid(int newCol)
-    {
-        //no more than three same secondary in a row
-        //no more than 4 same secondary in the last 10
-        if(previousColorsAdded.Count>=3)
-        {
-            if(previousColorsAdded[previousColorsAdded.Count-1]==newCol & previousColorsAdded[previousColorsAdded.Count-2]==newCol && previousColorsAdded[previousColorsAdded.Count-3]==newCol)
+    bool CheckIfNextColorValid(int newCol, bool duringSetup)
+    {   //no 2 same in a row
+        if(tilePrefabs[newCol].GetComponent<Image>().color==nextTilePreviewImage.color)
+            return false;
+        //no more than 6 secondary in the last 10
+        if(previousColorsAdded.Count==10 && newCol>2.5f)
+            if(FindNumberOfInstancesInList(previousColorsAdded,3)+FindNumberOfInstancesInList(previousColorsAdded,4)+FindNumberOfInstancesInList(previousColorsAdded,5)>=6) return false;
+        //no 4 secondary in a row
+        if(previousColorsAdded.Count==4 && newCol>2.5f)
+            if(previousColorsAdded[3]>2.5f && previousColorsAdded[2]>2.5f && previousColorsAdded[1]>2.5f && previousColorsAdded[0]>2.5f) return false;
+        if(duringSetup)
+            if(newCol != 0 && newCol != 1 && newCol != 2)
+            //make sure first move is with primary color
                 return false;
-            if(previousColorsAdded.Count==10)
-                if(FindNumberOfInstancesInList(previousColorsAdded,newCol)>=4) return false;
-        }
         return true;
     }
 

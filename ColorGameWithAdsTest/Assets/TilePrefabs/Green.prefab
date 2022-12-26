@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 8337491220222201151}
   - component: {fileID: 4377587380080998360}
   - component: {fileID: 889329610153987473}
+  - component: {fileID: 3423818473563747340}
   m_Layer: 0
   m_Name: Green
   m_TagString: Untagged
@@ -60,7 +61,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.039215688, g: 0.78431374, b: 0.14901961, a: 1}
+  m_Color: {r: 0.043137256, g: 0.7803922, b: 0.15294118, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -93,3 +94,24 @@ MonoBehaviour:
   blue: 1
   yellow: 1
   justChangedState: 0
+--- !u!223 &3423818473563747340
+Canvas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1304535836766207849}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_RenderMode: 2
+  m_Camera: {fileID: 0}
+  m_PlaneDistance: 100
+  m_PixelPerfect: 0
+  m_ReceivesEvents: 1
+  m_OverrideSorting: 1
+  m_OverridePixelPerfect: 0
+  m_SortingBucketNormalizedSize: 0
+  m_AdditionalShaderChannelsFlag: 0
+  m_SortingLayerID: 0
+  m_SortingOrder: 0
+  m_TargetDisplay: 0

@@ -16,10 +16,12 @@ public class MainMenuBehaviour : MonoBehaviour
     [SerializeField] GameObject musicButton;
     [SerializeField] GameObject soundsButton;
     [SerializeField] GameObject vibrationButton;
+    [SerializeField] GameObject FTUEinstructions;
     [SerializeField] TextMeshProUGUI highscoreTextMainMenu;
     [SerializeField] Sprite checkImage;
     [SerializeField] Sprite crossImage;
     bool atMenuScene = true;
+    bool bannerShown = false;
 
     // Start is called before the first frame update
     void Start()
@@ -76,6 +78,7 @@ public class MainMenuBehaviour : MonoBehaviour
         try{
             adsManager.GetComponent<BannerAd>().HideBannerAd();
         }catch{}
+        bannerShown = false;
         GetComponent<LeanManualAnimation>().BeginTransitions(); ChangeAtMenuScene(true);
     }
     public void DeleteHighscore()
@@ -87,23 +90,40 @@ public class MainMenuBehaviour : MonoBehaviour
         atMenuScene = b;
         if(b){
             highscoreTextMainMenu.text = PlayerPrefs.GetInt("Highscore",0)+"";
-            mainMenuCanvas.sortingOrder = 1;
+            mainMenuCanvas.sortingOrder = 5;
             StopCoroutine("PutMainMenuBehind");
         }
         else {
-            try
-            {
-                adsManager.GetComponent<BannerAd>().ShowBannerAd();
-            }catch{}
+            StartCoroutine(ShowBannerAd());
             StartCoroutine("PutMainMenuBehind");
         }
         //print(atMenuScene);
     }
 
+    IEnumerator ShowBannerAd()
+    {
+        if(!atMenuScene)
+        {
+            try
+            {
+                adsManager.GetComponent<BannerAd>().ShowBannerAd();
+                bannerShown = true;
+            }catch
+            {
+                bannerShown = false;
+            }  
+        }
+        yield return new WaitForSeconds(0.5f);
+
+        if(!bannerShown)
+            StartCoroutine(ShowBannerAd());
+    }
+
     IEnumerator PutMainMenuBehind()
     {
+        if(PlayerPrefs.GetInt("Highscore",0) == 0 && boardObject.GetComponent<ColorMerging>().GetMovesPlayed()==0) FTUEinstructions.GetComponent<LeanWindow>().On = true;
         yield return new WaitForSeconds(0.2f);//the time for its disappearance animation to play
-        mainMenuCanvas.sortingOrder = -1;
+        mainMenuCanvas.sortingOrder = -10;
     }
     public void OnTwitterLinkClicked() { Application.OpenURL("https://twitter.com/gggamesdev"); }
     public void OnItchioLinkClicked() { Application.OpenURL("https://gg-undroid-games.itch.io/"); }

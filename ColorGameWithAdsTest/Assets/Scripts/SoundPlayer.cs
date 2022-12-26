@@ -21,42 +21,42 @@ public class SoundPlayer : MonoBehaviour
     {
         if(PlayerPrefs.GetInt("SoundsOn",1)>0.5f)
         {
-            myAudioSource.PlayOneShot(buttonClip, 0.14f);
+            myAudioSource.PlayOneShot(buttonClip, 0.4f);
         }
     }
     public void PlaySwipeClip()
     {
         if(PlayerPrefs.GetInt("SoundsOn",1)>0.5f)
         {
-            myAudioSource.PlayOneShot(swipeClip, 0.4f);
+            myAudioSource.PlayOneShot(swipeClip, 0.8f);
         }
     }
     public void PlayCombineClip()
     {
         if(PlayerPrefs.GetInt("SoundsOn",1)>0.5f)
         {
-            myAudioSource.PlayOneShot(combineClip, 0.14f);
+            myAudioSource.PlayOneShot(combineClip, 1f);
         }
     }
     public void PlayDeleteClip()
     {
         if(PlayerPrefs.GetInt("SoundsOn",1)>0.5f)
         {
-            myAudioSource.PlayOneShot(deleteClip, 0.14f);
+            myAudioSource.PlayOneShot(deleteClip, 0.6f);
         }
     }
     public void PlayHighscoreClip()
     {
         if(PlayerPrefs.GetInt("SoundsOn",1)>0.5f)
         {
-            myAudioSource.PlayOneShot(highscoreClip, 0.14f);
+            myAudioSource.PlayOneShot(highscoreClip, 0.4f);
         }
     }
     public void PlayGameEndClip()
     {
         if(PlayerPrefs.GetInt("SoundsOn",1)>0.5f)
         {
-            myAudioSource.PlayOneShot(endGameClip, 0.14f);
+            myAudioSource.PlayOneShot(endGameClip, 0.4f);
         }
     }
 }
